@@ -14,16 +14,27 @@ fn main() {
             }
         }
     }
-
 }
 
 fn handle_connection(stream: &mut TcpStream) {
-    let mut buffer: [u8; 512] = [0; 512];
-    stream.read(&mut buffer).unwrap();
-    println!("Received: {:?}", buffer);
+    let mut buffer: [u8; 512] = [0; 512]; // u8 used to represent one Byte
 
-    let response = "+PONG\r\n";
+    loop {
+        match stream.read(&mut buffer) {
+            Ok(size) if size != 0 => {
+                let response = "+PONG\r\n";
 
-    stream.write(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
+                stream.write(response.as_bytes()).unwrap();
+                stream.flush().unwrap();
+            }
+            Ok(_) => {
+                println!("Connection closed!");
+                break;
+            }
+            Err(error) => {
+                println!("Error when reading from stream: {}", error);
+                break;
+            }
+        }
+    }
 }
