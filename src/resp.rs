@@ -1,9 +1,19 @@
 use crate::resp_result::RESPError::OutOfBounds;
-use crate::resp_result::RESPResult;
+use crate::resp_result::{RESPError, RESPResult};
 
 pub fn binary_extract_line_as_string(buffer: &[u8], index: &mut usize) -> RESPResult<String> {
     let line = binary_extract_line(buffer, index)?;
     Ok(String::from_utf8(line)?)
+}
+
+/// Check first character of buffer is the expected one and remove it
+pub fn resp_remove_type(value: char, buffer: &[u8], index: &mut usize) -> RESPResult<()> {
+    if buffer[*index] != value as u8 {
+        Err(RESPError::WrongType)
+    } else {
+        *index += 1;
+        Ok(())
+    }
 }
 
 fn binary_extract_line(buffer: &[u8], index: &mut usize) -> RESPResult<Vec<u8>> {
@@ -147,5 +157,24 @@ mod tests {
 
         assert_eq!(output, String::from("OK"));
         assert_eq!(index, 4);
+    }
+
+    #[test]
+    fn test_binary_remove_type() {
+        let buffer = "+OK\r\n".as_bytes();
+        let mut index: usize = 0;
+        resp_remove_type('+', buffer, &mut index).unwrap();
+
+        assert_eq!(index, 1);
+    }
+
+    #[test]
+    fn test_binary_remove_type_error() {
+        let buffer = "*OK\r\n".as_bytes();
+        let mut index: usize = 0;
+        let error = resp_remove_type('+', buffer, &mut index).unwrap_err();
+
+        assert_eq!(index, 0);
+        assert_eq!(error, RESPError::WrongType);
     }
 }
