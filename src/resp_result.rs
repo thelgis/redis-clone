@@ -17,8 +17,8 @@ impl From<FromUtf8Error> for RESPError {
 impl fmt::Display for RESPError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RESPError::FromUtf8 => write!(f, "Cannot convert from UTF-8"),
             RESPError::OutOfBounds(index) => write!(f, "Out of bounds at index {}", index),
+            RESPError::FromUtf8 => write!(f, "Cannot convert from UTF-8"),
             RESPError::WrongType => write!(f, "Wrong prefix for RESP type"),
         }
     }

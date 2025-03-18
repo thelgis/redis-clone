@@ -1,5 +1,29 @@
 use crate::resp_result::RESPError::OutOfBounds;
 use crate::resp_result::{RESPError, RESPResult};
+use std::fmt;
+use std::fmt::{Display, Formatter};
+
+#[derive(Debug, PartialEq)]
+pub enum RESP {
+    SimpleString(String),
+}
+
+impl Display for RESP {
+    // Display is preferred (compared to Into<String>) when the output string is to be viewed on a Screen
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let data = match self {
+            Self::SimpleString(data) => format!("+{}\r\n", data),
+        };
+        write!(f, "{}", data)
+    }
+}
+
+fn parse_simple_string(buffer: &[u8], index: &mut usize) -> RESPResult<RESP> {
+    resp_remove_type('+', buffer, index)?;
+
+    let line = binary_extract_line_as_string(buffer, index)?;
+    Ok(RESP::SimpleString(line))
+}
 
 pub fn binary_extract_line_as_string(buffer: &[u8], index: &mut usize) -> RESPResult<String> {
     let line = binary_extract_line(buffer, index)?;
@@ -176,5 +200,15 @@ mod tests {
 
         assert_eq!(index, 0);
         assert_eq!(error, RESPError::WrongType);
+    }
+
+    #[test]
+    fn test_parse_simple_string() {
+        let buffer = "+OK\r\n".as_bytes();
+        let mut index: usize = 0;
+        let output = parse_simple_string(buffer, &mut index).unwrap();
+
+        assert_eq!(output, RESP::SimpleString(String::from("OK")));
+        assert_eq!(index, 5);
     }
 }
