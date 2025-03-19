@@ -6,6 +6,7 @@ pub enum RESPError {
     FromUtf8,
     OutOfBounds(usize),
     WrongType,
+    Unknown,
 }
 
 impl From<FromUtf8Error> for RESPError {
@@ -20,6 +21,7 @@ impl fmt::Display for RESPError {
             RESPError::OutOfBounds(index) => write!(f, "Out of bounds at index {}", index),
             RESPError::FromUtf8 => write!(f, "Cannot convert from UTF-8"),
             RESPError::WrongType => write!(f, "Wrong prefix for RESP type"),
+            RESPError::Unknown => write!(f, "Unknown format for RESP string"),
         }
     }
 }
